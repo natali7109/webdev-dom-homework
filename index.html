@@ -66,6 +66,58 @@
   <script>
     "use strict";
     // Код писать здесь
+    const nameInput = document.querySelector('.add-form-name');
+const textInput = document.querySelector('.add-form-text');
+const addButton = document.querySelector('.add-form-button');
+const commentsList = document.querySelector('.comments');
+
+function getCurrentDate() {
+  const now = new Date();
+  return `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getFullYear()).slice(-2)} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+}
+
+function addComment() {
+  const name = nameInput.value.trim();
+  const text = textInput.value.trim();
+  
+  
+  if (!name) {
+    alert('Пожалуйста, введите ваше имя');
+    return;
+  }
+  
+  if (!text) {
+    alert('Пожалуйста, введите текст комментария');
+    return;
+  }
+  
+  // Добавление комментария
+  commentsList.innerHTML += `
+    <li class="comment">
+      <div class="comment-header">
+        <div>${name}</div>
+        <div>${getCurrentDate()}</div>
+      </div>
+      <div class="comment-body">
+        <div class="comment-text">
+          ${text.replace(/\n/g, '<br>')}
+        </div>
+      </div>
+      <div class="comment-footer">
+        <div class="likes">
+          <span class="likes-counter">0</span>
+          <button class="like-button"></button>
+        </div>
+      </div>
+    </li>
+  `;
+  
+  nameInput.value = '';
+  textInput.value = '';
+}
+
+addButton.addEventListener('click', addComment);
+
     console.log("It works!");
   </script>
 </html>
