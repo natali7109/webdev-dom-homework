@@ -1,7 +1,7 @@
 {
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  
+
   // Явно для каждого типа файлов
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -15,16 +15,16 @@
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  
+
   // ESLint
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
   "eslint.validate": ["javascript", "html"],
-  
+
   // Важно: отключаем требование конфига
   "prettier.requireConfig": false,
-  
+
   // Автосохранение
   "files.autoSave": "onFocusChange"
 }

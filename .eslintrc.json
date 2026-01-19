@@ -19,12 +19,5 @@
     "semi": ["error", "always"],
     "no-console": "warn",
     "no-unused-vars": "warn"
-  },
-  "overrides": [
-    {
-      "files": ["*.html"],
-      "parser": "@html-eslint/parser",
-      "extends": ["plugin:@html-eslint/recommended"]
-    }
-  ]
+  }
 }
