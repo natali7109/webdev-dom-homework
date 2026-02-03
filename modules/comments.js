@@ -1,54 +1,63 @@
 import { escapeHtml } from "./escapeHtml.js";
+import { api } from "../app.js";
 
-let comments = [
-  {
-    id: 1,
-    name: "Глеб Фокин",
-    date: "12.02.22 12:18",
-    text: "Это будет первый комментарий на этой странице",
-    likes: 3,
-    isLiked: false,
-  },
-  {
-    id: 2,
-    name: "Варвара Н.",
-    date: "13.02.22 19:22",
-    text: "Мне нравится как оформлена эта страница! ❤",
-    likes: 75,
-    isLiked: true,
-  },
-];
+// Локальный кэш комментариев
+let commentsCache = [];
 
-comments = comments.map((comment) => ({
-  ...comment,
-  name: escapeHtml(comment.name),
-  text: escapeHtml(comment.text),
-}));
+export async function loadComments() {
+  try {
+    const apiComments = await api.getComments();
+
+    commentsCache = apiComments.map((comment) => ({
+      id: comment.id,
+      name: comment.author ? escapeHtml(comment.author.name) : escapeHtml(comment.name || "Аноним"),
+      date: formatDate(comment.date),
+      text: escapeHtml(comment.text || ""),
+      likes: comment.likes || 0,
+      isLiked: comment.isLiked || false,
+    }));
+
+    return commentsCache;
+  } catch (error) {
+    console.error("Ошибка загрузки:", error);
+    return [];
+  }
+}
 
 export function getComments() {
-  return [...comments];
+  return [...commentsCache];
 }
 
-export function addComment(newComment) {
-  const commentWithId = {
-    id: Date.now(),
-    ...newComment,
-  };
-  comments.push(commentWithId);
-  return commentWithId;
-}
+export async function addComment(newComment) {
+  try {
+    await api.addComment({
+      text: newComment.text,
+      name: newComment.name,
+    });
 
-export function updateComment(index, updates) {
-  if (index >= 0 && index < comments.length) {
-    comments[index] = { ...comments[index], ...updates };
-    return comments[index];
+    // Перезагружаем после добавления
+    return await loadComments();
+  } catch (error) {
+    throw error;
   }
-  return null;
 }
 
-export function getComment(index) {
-  if (index >= 0 && index < comments.length) {
-    return { ...comments[index] };
+export async function toggleLike(commentId) {
+  try {
+    await api.toggleLike(commentId);
+    await loadComments(); // Перезагружаем
+  } catch (error) {
+    throw error;
   }
-  return null;
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("ru-RU", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
