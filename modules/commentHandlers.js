@@ -1,7 +1,9 @@
 import { escapeHtml } from "./escapeHtml.js";
 import { validateComment } from "./validation.js";
 import { renderComments } from "./render.js";
-import { api } from "../app.js";
+// Импортируем функции из api.js
+import { addComment, getComments } from "./api.js";
+// Импортируем из app.js
 import { currentComments } from "../app.js";
 import { commentsList, nameInput, textInput } from "./domElements.js";
 
@@ -30,7 +32,7 @@ export async function handleAddComment() {
 
   console.log("После экранирования:", { name: safeName, text: safeText });
 
-  // Блокируем кнопку на время отправки
+  // Блокируем кнопку
   const addButton = document.querySelector(".add-form-button");
   const originalText = addButton.textContent;
   addButton.textContent = "Добавляем...";
@@ -39,17 +41,17 @@ export async function handleAddComment() {
   try {
     console.log("Отправляем на сервер...");
 
-    // 1. Отправляем комментарий на сервер
-    const result = await api.addComment({
+    // 1. Отправляем комментарий на сервер (используем addComment из api.js)
+    const result = await addComment({
       text: safeText,
       name: safeName,
     });
 
     console.log("Сервер ответил:", result);
 
-    // 2. Получаем обновленный список с сервера
+    // 2. Получаем обновленный список с сервера (используем getComments из api.js)
     console.log("Запрашиваем обновленный список...");
-    const updatedComments = await api.getComments();
+    const updatedComments = await getComments();
     console.log("Обновленный список:", updatedComments);
 
     // 3. Обновляем currentComments в app.js
@@ -71,7 +73,7 @@ export async function handleAddComment() {
     console.error("Ошибка при добавлении комментария:", error);
     alert(`Ошибка: ${error.message}\n\nПопробуйте еще раз.`);
   } finally {
-    // Разблокируем кнопку в любом случае
+    // Разблокируем кнопку
     addButton.textContent = originalText;
     addButton.disabled = false;
     console.log("Кнопка разблокирована");
@@ -88,7 +90,7 @@ export async function toggleLike(commentId) {
     return;
   }
 
-  // Меняем состояние локально (БЕЗ ВЫЗОВОВ API!)
+  // Меняем состояние локально
   const comment = currentComments[commentIndex];
   comment.isLiked = !comment.isLiked;
   comment.likes = comment.isLiked
@@ -111,7 +113,6 @@ function updateCommentInDOM(commentId, commentData) {
   const commentElement = document.querySelector(`.comment[data-id="${commentId}"]`);
   if (!commentElement) return;
 
-  // Обновляем счетчик лайков
   const likesCounter = commentElement.querySelector(".likes-counter");
   const likeButton = commentElement.querySelector(".like-button");
 
@@ -134,12 +135,14 @@ export function quoteComment(commentId, replyInput) {
   const comment = currentComments.find((c) => c.id == commentId);
   if (!comment) return;
 
-  const authorName = comment.author ? comment.author.name : comment.name;
-  const textForTextarea = (comment.text || "").replace(/<br\s*\/?>/gi, "\n");
-  const textLines = textForTextarea.split("\n");
-  const quotedLines = textLines.map((line) => `> ${line}`).join("\n");
-  const quotedText = `> ${authorName}:\n${quotedLines}\n\n`;
+  // Имя из author.name
+  const authorName = comment.author ? comment.author.name : "Аноним";
+  const commentText = comment.text || "";
 
-  replyInput.value = quotedText + replyInput.value;
+  // Удаляем HTML
+  const textWithoutHtml = commentText.replace(/<[^>]*>/g, "");
+  const quotedText = `> ${authorName}:\n> ${textWithoutHtml}\n\n`;
+
+  replyInput.value = quotedText + (replyInput.value || "");
   replyInput.focus();
 }

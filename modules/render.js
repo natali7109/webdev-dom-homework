@@ -3,10 +3,8 @@ import { currentComments } from "../app.js";
 export function renderComments(container) {
   console.log("renderComments: рендерим", currentComments.length, "комментариев");
 
-  // Очищаем только если есть что рендерить
-  if (currentComments.length > 0) {
-    container.innerHTML = "";
-  }
+  // Очищаем контейнер
+  container.innerHTML = "";
 
   currentComments.forEach((comment) => {
     const commentElement = createCommentElement(comment);
@@ -19,16 +17,18 @@ function createCommentElement(comment) {
   li.className = "comment";
   li.dataset.id = comment.id;
 
-  // Используем ту же структуру, что в HTML
+  // ПО ДОКУМЕНТАЦИИ: API возвращает author.name
+  // Поддержка старого формата для обратной совместимости
   const authorName = comment.author?.name || comment.name || "Аноним";
+
+  const commentText = comment.text || "";
   const commentDate = comment.date || new Date().toISOString();
-  const formattedDate = formatDate(commentDate);
   const likesCount = comment.likes || 0;
   const isLiked = comment.isLiked || false;
-  const likeClass = isLiked ? "-active-like" : "";
 
-  // Форматируем текст (заменяем переносы строк на <br>)
-  const commentText = (comment.text || "").replace(/\n/g, "<br>");
+  const formattedDate = formatDate(commentDate);
+  const formattedText = commentText.replace(/\n/g, "<br>");
+  const likeClass = isLiked ? "-active-like" : "";
 
   li.innerHTML = `
     <div class="comment-header">
@@ -36,7 +36,7 @@ function createCommentElement(comment) {
       <div>${formattedDate}</div>
     </div>
     <div class="comment-body">
-      <div class="comment-text">${escapeHtml(commentText)}</div>
+      <div class="comment-text">${escapeHtml(formattedText)}</div>
     </div>
     <div class="comment-footer">
       <div class="likes">
@@ -82,7 +82,9 @@ function escapeHtml(text) {
   div.textContent = text;
   return div.innerHTML;
 }
-
+/*
+// Эта функция может понадобиться для совместимости
 export function getCommentElement(index) {
   return document.querySelector(`.comment[data-index="${index}"]`);
 }
+*/

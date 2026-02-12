@@ -1,4 +1,4 @@
-import { handleAddComment } from "./modules/commentHandlers.js";
+/*import { handleAddComment } from "./modules/commentHandlers.js";
 import { setupEventListeners, setupFormHandlers } from "./modules/eventHandlers.js";
 import { nameInput, textInput, addButton, commentsList } from "./modules/domElements.js";
 import { renderComments } from "./modules/render.js";
@@ -89,4 +89,32 @@ async function initApp() {
 document.addEventListener("DOMContentLoaded", initApp);
 
 // Экспортируем api и currentComments
-export { api, currentComments };
+export { api, currentComments };*/
+
+import { handleAddComment } from "./modules/commentHandlers.js";
+import { setupEventListeners, setupFormHandlers } from "./modules/eventHandlers.js";
+import { nameInput, textInput, addButton, commentsList } from "./modules/domElements.js";
+import { renderComments } from "./modules/render.js";
+import { getComments, addComment } from "./modules/api.js";
+
+let currentComments = [];
+
+function initApp() {
+  console.log("Приложение запускается...");
+
+  // 1. Загружаем комментарии
+  getComments().then((comments) => {
+    console.log("Загружено комментариев:", comments.length);
+    currentComments = comments;
+    renderComments(commentsList);
+  });
+
+  // 2. Настраиваем обработчики
+  setupFormHandlers(nameInput, textInput, addButton, commentsList, handleAddComment);
+  setupEventListeners(commentsList, textInput);
+}
+
+document.addEventListener("DOMContentLoaded", initApp);
+
+// Экспортируем для других модулей
+export { getComments, addComment, currentComments };
