@@ -1,83 +1,75 @@
 import { escapeHtml } from "./escapeHtml.js";
 import { validateComment } from "./validation.js";
 import { renderComments } from "./render.js";
-// Импортируем функции из api.js
 import { addComment, getComments } from "./api.js";
-// Импортируем из app.js
 import { currentComments } from "../app.js";
 import { commentsList, nameInput, textInput } from "./domElements.js";
 
-export async function handleAddComment() {
+export function handleAddComment() {
   console.log("=== handleAddComment вызван ===");
 
   const nameValue = nameInput.value.trim();
   const textValue = textInput.value.trim();
 
-  console.log("Введенные данные:", { name: nameValue, text: textValue });
-
-  // Валидация
   const validation = validateComment(nameValue, textValue);
   if (!validation.isValid) {
-    console.log("Валидация не пройдена:", validation.message);
     alert(validation.message);
     validation.focusElement === "name" ? nameInput.focus() : textInput.focus();
     return;
   }
 
-  console.log("Валидация пройдена");
-
   // Экранирование HTML
   const safeName = escapeHtml(nameValue);
   const safeText = escapeHtml(textValue);
 
-  console.log("После экранирования:", { name: safeName, text: safeText });
-
-  // Блокируем кнопку
+  // НАХОДИМ ФОРМУ И ЛОАДЕР
+  const addForm = document.querySelector(".add-form");
+  const formLoading = document.querySelector(".form-loading");
   const addButton = document.querySelector(".add-form-button");
   const originalText = addButton.textContent;
+
+  // СКРЫВАЕМ ФОРМУ, ПОКАЗЫВАЕМ "Комментарий добавляется..."
+  addForm.style.display = "none";
+  formLoading.style.display = "block";
   addButton.textContent = "Добавляем...";
   addButton.disabled = true;
 
-  try {
-    console.log("Отправляем на сервер...");
+  return addComment({
+    text: safeText,
+    name: safeName,
+  })
+    .then((result) => {
+      console.log("Сервер ответил:", result);
+      console.log("Запрашиваем обновленный список...");
+      return getComments();
+    })
+    .then((updatedComments) => {
+      console.log("Обновленный список:", updatedComments);
 
-    // 1. Отправляем комментарий на сервер (используем addComment из api.js)
-    const result = await addComment({
-      text: safeText,
-      name: safeName,
+      // Обновляем currentComments
+      currentComments.length = 0;
+      currentComments.push(...updatedComments);
+
+      // Перерисовываем
+      renderComments(commentsList);
+
+      // Очищаем форму
+      nameInput.value = "";
+      textInput.value = "";
+      nameInput.focus();
+
+      console.log("=== Комментарий успешно добавлен ===");
+    })
+    .catch((error) => {
+      console.error("Ошибка при добавлении комментария:", error);
+      alert(`Ошибка: ${error.message}\n\nПопробуйте еще раз.`);
+    })
+    .finally(() => {
+      addForm.style.display = "";
+      formLoading.style.display = "none";
+      addButton.textContent = originalText;
+      addButton.disabled = false;
     });
-
-    console.log("Сервер ответил:", result);
-
-    // 2. Получаем обновленный список с сервера (используем getComments из api.js)
-    console.log("Запрашиваем обновленный список...");
-    const updatedComments = await getComments();
-    console.log("Обновленный список:", updatedComments);
-
-    // 3. Обновляем currentComments в app.js
-    console.log("Обновляем currentComments...");
-    currentComments.length = 0;
-    currentComments.push(...updatedComments);
-
-    // 4. Перерисовываем
-    console.log("Перерисовываем комментарии...");
-    renderComments(commentsList);
-
-    // 5. Очищаем форму
-    nameInput.value = "";
-    textInput.value = "";
-    nameInput.focus();
-
-    console.log("=== Комментарий успешно добавлен ===");
-  } catch (error) {
-    console.error("Ошибка при добавлении комментария:", error);
-    alert(`Ошибка: ${error.message}\n\nПопробуйте еще раз.`);
-  } finally {
-    // Разблокируем кнопку
-    addButton.textContent = originalText;
-    addButton.disabled = false;
-    console.log("Кнопка разблокирована");
-  }
 }
 
 export async function toggleLike(commentId) {

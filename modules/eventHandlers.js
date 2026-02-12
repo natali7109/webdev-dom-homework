@@ -3,12 +3,12 @@ import { quoteComment, toggleLike } from "./commentHandlers.js";
 export function setupEventListeners(container, replyInput) {
   console.log("setupEventListeners: настройка обработчиков");
 
-  container.addEventListener("click", async (event) => {
+  container.addEventListener("click", (event) => {
     const target = event.target;
 
     console.log("Клик в контейнере, target:", target.className);
 
-    // 1. Лайк комментария (останавливаем дальнейшую обработку)
+    // 1. Лайк комментария
     if (target.classList.contains("like-button")) {
       event.preventDefault();
       event.stopPropagation();
@@ -17,13 +17,12 @@ export function setupEventListeners(container, replyInput) {
       console.log("Лайк по комментарию ID:", commentId);
 
       if (commentId) {
-        await toggleLike(commentId);
+        toggleLike(commentId);
       }
-      return; // Не обрабатываем клик дальше
+      return;
     }
 
-    // 2. Клик на ЛЮБОЙ части комментария (кроме кнопок)
-    // Ищем ближайший элемент .comment
+    // 2. Клик для цитирования
     const commentElement = target.closest(".comment");
 
     if (commentElement && replyInput) {
@@ -42,8 +41,16 @@ export function setupEventListeners(container, replyInput) {
   console.log("Обработчики установлены");
 }
 
-export function setupFormHandlers(nameInput, textInput, addButton, container, handleAddComment) {
+export function setupFormHandlers(handleAddComment) {
   console.log("setupFormHandlers: настройка формы");
+
+  const addButton = document.querySelector(".add-form-button");
+  const textInput = document.querySelector(".add-form-text");
+
+  if (!addButton || !textInput) {
+    console.error("Элементы формы не найдены!");
+    return;
+  }
 
   addButton.addEventListener("click", (event) => {
     event.preventDefault();
