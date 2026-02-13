@@ -1,6 +1,0 @@
-﻿node_modules/
-*.min.js
-*.min.css
-build/
-dist/
-*.log
