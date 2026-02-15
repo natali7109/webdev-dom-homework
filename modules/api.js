@@ -3,10 +3,19 @@ export function getComments() {
     method: "GET",
   })
     .then((response) => {
+      if (response.status === 500) {
+        throw new Error("Сервер сломался, попробуй позже");
+      }
       return response.json();
     })
     .then((responseData) => {
       return responseData.comments;
+    })
+    .catch((error) => {
+      if (error.message === "Failed to fetch") {
+        alert("Кажется, у вас сломался интернет, попробуйте позже.");
+      }
+      throw error;
     });
 }
 
@@ -17,17 +26,25 @@ export function addComment({ text, name }) {
       text: text,
       name: name,
     }),
-  }).then((response) => {
-    console.log("Статус ответа:", response.status);
-
-    if (response.status === 201) {
-      return response.json();
-    } else {
-      return response.json().then((errorData) => {
-        throw new Error(errorData.error || "Ошибка добавления");
-      });
-    }
-  });
+  })
+    .then((response) => {
+      if (response.status === 201) {
+        return response.json();
+      }
+      if (response.status === 500) {
+        throw new Error("Сервер сломался, попробуй позже");
+      }
+      if (response.status === 400) {
+        throw new Error("Не верный запрос");
+      }
+      throw new Error("что-то пошло не так");
+    })
+    .catch((error) => {
+      if (error.message === "Failed to fetch") {
+        error.message = "Кажется, у вас сломался интернет, попробуйте позже.";
+      }
+      throw error;
+    });
 }
 
 // Лайки не поддерживаются API

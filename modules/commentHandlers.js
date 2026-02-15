@@ -62,7 +62,7 @@ export function handleAddComment() {
     })
     .catch((error) => {
       console.error("Ошибка при добавлении комментария:", error);
-      alert(`Ошибка: ${error.message}\n\nПопробуйте еще раз.`);
+      alert(error.message);
     })
     .finally(() => {
       addForm.style.display = "";

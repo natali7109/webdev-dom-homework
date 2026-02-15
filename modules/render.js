@@ -17,8 +17,6 @@ function createCommentElement(comment) {
   li.className = "comment";
   li.dataset.id = comment.id;
 
-  // ПО ДОКУМЕНТАЦИИ: API возвращает author.name
-  // Поддержка старого формата для обратной совместимости
   const authorName = comment.author?.name || comment.name || "Аноним";
 
   const commentText = comment.text || "";
