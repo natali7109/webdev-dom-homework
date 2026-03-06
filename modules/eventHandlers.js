@@ -1,4 +1,5 @@
-import { quoteComment, toggleLike } from "./commentHandlers.js";
+import { handleToggleLike, quoteComment } from "./commentHandlers.js";
+import { isAuthenticated } from "./auth.js";
 
 export function setupEventListeners(container, replyInput) {
   console.log("setupEventListeners: настройка обработчиков");
@@ -17,7 +18,7 @@ export function setupEventListeners(container, replyInput) {
       console.log("Лайк по комментарию ID:", commentId);
 
       if (commentId) {
-        toggleLike(commentId);
+        handleToggleLike(commentId); // ✅ Вызываем новую функцию
       }
       return;
     }
@@ -67,4 +68,29 @@ export function setupFormHandlers(handleAddComment) {
   });
 
   console.log("Обработчики формы установлены");
+}
+
+// ✅ НОВАЯ ФУНКЦИЯ для кнопки входа/выхода
+export function setupAuthButton() {
+  const authButton = document.querySelector(".auth-button");
+  if (!authButton) return;
+
+  if (isAuthenticated()) {
+    authButton.textContent = "Выйти";
+    authButton.classList.add("logout-button");
+  } else {
+    authButton.textContent = "Войти";
+    authButton.classList.remove("logout-button");
+  }
+
+  authButton.addEventListener("click", () => {
+    if (isAuthenticated()) {
+      // Выход
+      localStorage.removeItem("token");
+      window.location.reload();
+    } else {
+      // Переход на страницу входа
+      window.location.href = "/login.html";
+    }
+  });
 }
