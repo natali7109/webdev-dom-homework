@@ -1,4 +1,9 @@
-export const nameInput = document.querySelector(".add-form-name");
-export const textInput = document.querySelector(".add-form-text");
-export const addButton = document.querySelector(".add-form-button");
-export const commentsList = document.querySelector(".comments");
+export const textInput = document.getElementById("comment-input");
+export const addButton = document.getElementById("add-button");
+export const commentsList = document.getElementById("comments-list");
+export const loader = document.getElementById("loader");
+export const addingMessage = document.getElementById("adding-message");
+export const authButton = document.querySelector(".auth-button");
+export const authSection = document.querySelector(".auth-section");
+export const addForm = document.querySelector(".add-form");
+export const formLoading = document.querySelector(".form-loading");
