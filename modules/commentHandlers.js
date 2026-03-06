@@ -1,34 +1,40 @@
 import { escapeHtml } from "./escapeHtml.js";
 import { validateComment } from "./validation.js";
 import { renderComments } from "./render.js";
-import { addComment, getComments } from "./api.js";
+import { addComment, getComments, toggleLike } from "./api.js";
+import { isAuthenticated } from "./auth.js";
 import { currentComments } from "../app.js";
-import { commentsList, nameInput, textInput } from "./domElements.js";
+import { commentsList, textInput, addButton } from "./domElements.js";
 
 export function handleAddComment() {
   console.log("=== handleAddComment вызван ===");
 
-  const nameValue = nameInput.value.trim();
+  // ✅ Проверяем, авторизован ли пользователь
+  if (!isAuthenticated()) {
+    alert("Чтобы добавить комментарий, нужно авторизоваться");
+    // Можно перенаправить на страницу логина
+    window.location.href = "/login.html";
+    return;
+  }
+
   const textValue = textInput.value.trim();
 
-  const validation = validateComment(nameValue, textValue);
+  const validation = validateComment(textValue);
   if (!validation.isValid) {
     alert(validation.message);
-    validation.focusElement === "name" ? nameInput.focus() : textInput.focus();
+    textInput.focus();
     return;
   }
 
   // Экранирование HTML
-  const safeName = escapeHtml(nameValue);
   const safeText = escapeHtml(textValue);
 
-  // НАХОДИМ ФОРМУ И ЛОАДЕР
+  // Находим форму и лоадер
   const addForm = document.querySelector(".add-form");
   const formLoading = document.querySelector(".form-loading");
-  const addButton = document.querySelector(".add-form-button");
   const originalText = addButton.textContent;
 
-  // СКРЫВАЕМ ФОРМУ, ПОКАЗЫВАЕМ "Комментарий добавляется..."
+  // Скрываем форму, показываем "Комментарий добавляется..."
   addForm.style.display = "none";
   formLoading.style.display = "block";
   addButton.textContent = "Добавляем...";
@@ -36,7 +42,6 @@ export function handleAddComment() {
 
   return addComment({
     text: safeText,
-    name: safeName,
   })
     .then((result) => {
       console.log("Сервер ответил:", result);
@@ -51,12 +56,11 @@ export function handleAddComment() {
       currentComments.push(...updatedComments);
 
       // Перерисовываем
-      renderComments(commentsList);
+      renderComments(commentsList, updatedComments);
 
       // Очищаем форму
-      nameInput.value = "";
       textInput.value = "";
-      nameInput.focus();
+      textInput.focus();
 
       console.log("=== Комментарий успешно добавлен ===");
     })
@@ -72,32 +76,37 @@ export function handleAddComment() {
     });
 }
 
-export async function toggleLike(commentId) {
-  console.log("=== toggleLike (локальный) для ID:", commentId);
+export function handleToggleLike(commentId) {
+  console.log("=== handleToggleLike для ID:", commentId);
 
-  // Находим комментарий
-  const commentIndex = currentComments.findIndex((c) => c.id === commentId || c.id == commentId);
-  if (commentIndex === -1) {
-    console.log("Комментарий не найден");
-    return;
+  // ✅ Проверяем, авторизован ли пользователь
+  if (!isAuthenticated()) {
+    alert("Чтобы ставить лайки, нужно авторизоваться");
+    return Promise.resolve();
   }
 
-  // Меняем состояние локально
-  const comment = currentComments[commentIndex];
-  comment.isLiked = !comment.isLiked;
-  comment.likes = comment.isLiked
-    ? (comment.likes || 0) + 1
-    : Math.max(0, (comment.likes || 0) - 1);
+  // Оптимистичный UI (сразу меняем интерфейс)
+  const comment = currentComments.find((c) => c.id === commentId);
+  if (comment) {
+    comment.isLiked = !comment.isLiked;
+    comment.likes = comment.isLiked ? (comment.likes || 0) + 1 : (comment.likes || 0) - 1;
 
-  console.log("Новое состояние:", {
-    isLiked: comment.isLiked,
-    likes: comment.likes,
+    // Обновляем DOM для этого комментария
+    updateCommentInDOM(commentId, comment);
+  }
+
+  // Отправляем запрос на сервер
+  return toggleLike(commentId).catch((error) => {
+    console.error("Ошибка при лайке:", error);
+    alert(error.message);
+
+    // Откатываем изменения при ошибке
+    if (comment) {
+      comment.isLiked = !comment.isLiked;
+      comment.likes = comment.isLiked ? (comment.likes || 0) + 1 : (comment.likes || 0) - 1;
+      updateCommentInDOM(commentId, comment);
+    }
   });
-
-  // Перерисовываем этот комментарий
-  updateCommentInDOM(commentId, comment);
-
-  console.log("=== Лайк обработан локально ===");
 }
 
 // Функция для обновления одного комментария в DOM
@@ -127,8 +136,8 @@ export function quoteComment(commentId, replyInput) {
   const comment = currentComments.find((c) => c.id == commentId);
   if (!comment) return;
 
-  // Имя из author.name
-  const authorName = comment.author ? comment.author.name : "Аноним";
+  // Имя автора
+  const authorName = comment.author?.name || "Аноним";
   const commentText = comment.text || "";
 
   // Удаляем HTML
