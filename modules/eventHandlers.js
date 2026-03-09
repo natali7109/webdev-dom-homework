@@ -1,29 +1,41 @@
 import { handleToggleLike, quoteComment } from "./commentHandlers.js";
 import { isAuthenticated } from "./auth.js";
 
-export function setupEventListeners(container, replyInput) {
-  console.log("setupEventListeners: настройка обработчиков");
+export function setupLoginLink() {
+  const loginLink = document.getElementById("show-login-link");
 
+  loginLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    // показать форму входа
+    const appContainer = document.getElementById("app-container");
+    import("./render.js").then(({ renderLoginForm }) => {
+      renderLoginForm(appContainer);
+      import("./loginHandler.js").then(({ initLoginHandlers }) => {
+        initLoginHandlers(appContainer);
+      });
+    });
+  });
+}
+
+export function setupEventListeners(container, replyInput) {
   container.addEventListener("click", (event) => {
     const target = event.target;
 
-    console.log("Клик в контейнере, target:", target.className);
-
-    // 1. Лайк комментария
+    //  Лайк комментария
     if (target.classList.contains("like-button")) {
       event.preventDefault();
       event.stopPropagation();
 
       const commentId = target.dataset.id;
-      console.log("Лайк по комментарию ID:", commentId);
 
       if (commentId) {
-        handleToggleLike(commentId); // ✅ Вызываем новую функцию
+        handleToggleLike(commentId);
       }
       return;
     }
 
-    // 2. Клик для цитирования
+    //  Клик для цитирования
     const commentElement = target.closest(".comment");
 
     if (commentElement && replyInput) {
@@ -31,19 +43,15 @@ export function setupEventListeners(container, replyInput) {
       event.stopPropagation();
 
       const commentId = commentElement.dataset.id;
-      console.log("Клик по комментарию для ответа, ID:", commentId);
 
       if (commentId && replyInput) {
         quoteComment(commentId, replyInput);
       }
     }
   });
-
-  console.log("Обработчики установлены");
 }
 
 export function setupFormHandlers(handleAddComment) {
-  console.log("setupFormHandlers: настройка формы");
 
   const addButton = document.querySelector(".add-form-button");
   const textInput = document.querySelector(".add-form-text");
@@ -55,22 +63,18 @@ export function setupFormHandlers(handleAddComment) {
 
   addButton.addEventListener("click", (event) => {
     event.preventDefault();
-    console.log('Кнопка "Написать" нажата');
     handleAddComment();
   });
 
   textInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      console.log("Enter нажат в поле текста");
       handleAddComment();
     }
   });
-
-  console.log("Обработчики формы установлены");
 }
 
-// ✅ НОВАЯ ФУНКЦИЯ для кнопки входа/выхода
+// ФУНКЦИЯ для кнопки входа/выхода
 export function setupAuthButton() {
   const authButton = document.querySelector(".auth-button");
   if (!authButton) return;
@@ -89,8 +93,24 @@ export function setupAuthButton() {
       localStorage.removeItem("token");
       window.location.reload();
     } else {
-      // Переход на страницу входа
-      window.location.href = "/login.html";
+      const appContainer = document.getElementById("app-container");
+      import("./render.js").then(({ renderLoginForm }) => {
+        renderLoginForm(appContainer);
+        import("./loginHandler.js").then(({ initLoginHandlers }) => {
+          initLoginHandlers(appContainer);
+        });
+      });
     }
   });
+}
+
+export function setupLogoutButton() {
+  const logoutButton = document.getElementById("logout-button");
+
+  if (logoutButton) {
+    logoutButton.addEventListener("click", () => {
+      localStorage.removeItem("token");
+      window.location.reload();
+    });
+  }
 }

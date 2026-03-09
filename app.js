@@ -1,32 +1,72 @@
-import { handleAddComment } from "./modules/commentHandlers.js";
-import { setupEventListeners, setupFormHandlers } from "./modules/eventHandlers.js";
-import { nameInput, textInput, addButton, commentsList } from "./modules/domElements.js";
-import { renderComments } from "./modules/render.js";
+import { renderComments, renderLoginForm } from "./modules/render.js";
+import { initLoginHandlers } from "./modules/loginHandler.js";
+import {
+  setupEventListeners,
+  setupFormHandlers,
+  setupLogoutButton,
+  setupLoginLink,
+} from "./modules/eventHandlers.js";
 import { getComments, addComment } from "./modules/api.js";
+import { isAuthenticated } from "./modules/auth.js";
+import { handleAddComment } from "./modules/commentHandlers.js";
 
 let currentComments = [];
 
 function initApp() {
-  document.querySelector(".comments").innerHTML = "Пожалуйста подождите, приложение запускается...";
-  console.log("Приложение запускается...");
+  const appContainer = document.getElementById("app-container");
+  const path = window.location.pathname;
+
+  // Если мы на странице входа
+  if (path.includes("login")) {
+    renderLoginForm(appContainer);
+    initLoginHandlers(appContainer);
+    return;
+  }
+
+  // загружаем комментарии (видят все!)
+  appContainer.innerHTML = '<div class="loader">Загрузка комментариев...</div>';
 
   getComments()
     .then((comments) => {
-      console.log("Загружено комментариев:", comments.length);
       currentComments = comments;
-      renderComments(commentsList, comments);
+
+      // ПОТОМ проверяем авторизацию
+      if (!isAuthenticated()) {
+        renderComments(appContainer, comments, false);
+      } else {
+        renderComments(appContainer, comments, true);
+      }
     })
     .catch((error) => {
       console.error(error);
-      document.querySelector(".comments").innerHTML = "Не удалось загрузить комментарии";
-    });
+      appContainer.innerHTML = '<div class="error">Не удалось загрузить комментарии</div>';
+    })
+    .finally(() => {
+      setTimeout(() => {
+        setupLogoutButton();
+        setupLoginLink();
+        if (isAuthenticated()) {
+          const textInput = document.getElementById("comment-input");
+          const addButton = document.getElementById("add-button");
 
-  // Настраиваем обработчики
-  setupFormHandlers(handleAddComment);
-  setupEventListeners(commentsList, textInput);
+          if (textInput && addButton) {
+            setupFormHandlers(handleAddComment);
+          }
+
+          const commentsList = document.getElementById("comments-list");
+          if (commentsList) {
+            setupEventListeners(commentsList, textInput);
+          }
+        } else {
+          const commentsList = document.getElementById("comments-list");
+          if (commentsList) {
+            setupEventListeners(commentsList, null);
+          }
+        }
+      }, 0);
+    });
 }
 
 document.addEventListener("DOMContentLoaded", initApp);
 
-// Экспортируем для других модулей
 export { getComments, addComment, currentComments };

@@ -1,4 +1,3 @@
-<!doctype html>
 <html>
   <head>
     <title>Проект "Комменты"</title>
@@ -8,42 +7,8 @@
 
   <body>
     <div class="container">
-      <!-- ✅ КНОПКА АВТОРИЗАЦИИ (НОВАЯ) -->
-      <div class="auth-section">
-        <button class="auth-button">Войти</button>
-      </div>
-
-      <!-- СПИСОК КОММЕНТАРИЕВ (ОСТАВЛЯЕМ ПУСТЫМ - БУДЕТ ЗАГРУЖАТЬСЯ) -->
-      <ul class="comments" id="comments-list">
-        <!-- Комментарии загружаются через JS -->
-      </ul>
-
-      <!-- ФОРМА ДОБАВЛЕНИЯ -->
-      <div class="add-form">
-        <!-- ❌ УБИРАЕМ ПОЛЕ ИМЕНИ -->
-        <!-- <input type="text" class="add-form-name" placeholder="Введите ваше имя" /> -->
-
-        <textarea
-          type="textarea"
-          class="add-form-text"
-          id="comment-input"
-          placeholder="Введите ваш комментарий"
-          rows="4"
-        ></textarea>
-        <div class="add-form-row">
-          <button class="add-form-button" id="add-button">Написать</button>
-        </div>
-      </div>
-
-      <!-- ЛОАДЕР ПРИ ДОБАВЛЕНИИ -->
-      <div class="form-loading" style="display: none; margin-top: 20px" id="adding-message">
-        Комментарий добавляется...
-      </div>
-
-      <!-- ЛОАДЕР ПРИ ЗАГРУЗКЕ -->
-      <div class="loader" style="display: none; margin-top: 20px" id="loader">
-        Загрузка комментариев...
-      </div>
+      <!-- КОНТЕЙНЕР ДЛЯ ВСЕГО КОНТЕНТА -->
+      <div id="app-container"></div>
     </div>
     <script type="module" src="app.js"></script>
   </body>

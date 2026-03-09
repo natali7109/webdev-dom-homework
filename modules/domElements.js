@@ -1,5 +1,5 @@
 export const textInput = document.getElementById("comment-input");
-export const addButton = document.getElementById("add-button");
+//export const addButton = document.getElementById("add-button");
 export const commentsList = document.getElementById("comments-list");
 export const loader = document.getElementById("loader");
 export const addingMessage = document.getElementById("adding-message");

@@ -1,88 +1,156 @@
-import { currentComments } from "../app.js";
+import { getUserName } from "./auth.js"; 
 
-export function renderComments(container) {
-  console.log("renderComments: рендерим", currentComments.length, "комментариев");
-
-  // Очищаем контейнер
-  container.innerHTML = "";
-
-  currentComments.forEach((comment) => {
-    const commentElement = createCommentElement(comment);
-    container.appendChild(commentElement);
-  });
+function getCurrentUserName() {
+  return getUserName(); 
 }
 
-function createCommentElement(comment) {
-  const li = document.createElement("li");
-  li.className = "comment";
-  li.dataset.id = comment.id;
+export function renderComments(container, comments, showForm = false) {
+  const commentsHtml = comments
+    .map((comment) => {
+      const likeClass = comment.isLiked ? "-active-like" : "";
 
-  const authorName = comment.author?.name || comment.name || "Аноним";
+      return `<li class="comment" data-id="${comment.id}">
+        <div class="comment-header">
+          <div>${comment.author.name}</div>
+          <div>${new Date(comment.date).toLocaleString()}</div>
+        </div>
+        <div class="comment-body">
+          <div class="comment-text">${comment.text}</div>
+        </div>
+        <div class="comment-footer">
+          <div class="likes">
+            <span class="likes-counter">${comment.likes}</span>
+            <button class="like-button ${likeClass}" data-id="${comment.id}"></button>
+          </div>
+        </div>
+      </li>`;
+    })
+    .join("");
 
-  const commentText = comment.text || "";
-  const commentDate = comment.date || new Date().toISOString();
-  const likesCount = comment.likes || 0;
-  const isLiked = comment.isLiked || false;
-
-  const formattedDate = formatDate(commentDate);
-  const formattedText = commentText.replace(/\n/g, "<br>");
-  const likeClass = isLiked ? "-active-like" : "";
-
-  li.innerHTML = `
-    <div class="comment-header">
-      <div>${escapeHtml(authorName)}</div>
-      <div>${formattedDate}</div>
+  // Кнопка выхода (только для авторизованных)
+  const logoutButtonHtml = showForm
+    ? `
+    <div class="logout-section">
+      <button class="logout-button" id="logout-button">Выйти</button>
     </div>
-    <div class="comment-body">
-      <div class="comment-text">${escapeHtml(formattedText)}</div>
-    </div>
-    <div class="comment-footer">
-      <div class="likes">
-        <span class="likes-counter">${likesCount}</span>
-        <button class="like-button ${likeClass}" data-id="${comment.id}"></button>
+  `
+    : "";
+
+  const addFormHtml = showForm
+    ? `<div class="add-form">
+      <input 
+        type="text" 
+        class="add-form-name" 
+        id="user-name-input"
+        value="${getUserName()}" 
+        readonly
+        style="background-color: rgba(255, 255, 255, 0.1); color: white; opacity: 0.9;"
+      />
+      <textarea
+        type="textarea"
+        class="add-form-text"
+        id="comment-input"
+        placeholder="Введите ваш комментарий"
+        rows="4"
+      ></textarea>
+      <div class="add-form-row">
+        <button class="add-form-button" id="add-button">Написать</button>
       </div>
+      <div class="form-loading" style="display: none;" id="adding-message">
+        Комментарий добавляется...
+      </div>
+    </div>`
+    : `<div class="login-prompt">
+      <p>Чтобы добавить комментарий, <a href="#" class="login-link" id="show-login-link">войдите</a></p>
+    </div>`;
+
+  const fullHtml = `
+    ${logoutButtonHtml}
+    <ul class="comments" id="comments-list">
+      ${commentsHtml}
+    </ul>
+    ${addFormHtml}
+    <div class="loader" style="display: none;" id="loader">Загрузка комментариев...</div>
+  `;
+
+  container.innerHTML = fullHtml;
+}
+
+export function renderLoginForm(container) {
+  const loginHtml = `
+    <div class="add-form" style="margin-top: 20px;">
+      <h3 style="margin-bottom: 15px; color: white; text-align: center;">Форма входа</h3>
+      
+      <input 
+        type="text" 
+        id="login-input" 
+        class="add-form-name" 
+        placeholder="Логин" 
+        style="width: 100%; margin-bottom: 10px;"
+      />
+      
+      <input 
+        type="password" 
+        id="password-input" 
+        class="add-form-name" 
+        placeholder="Пароль" 
+        style="width: 100%; margin-bottom: 10px;"
+      />
+      
+      <div class="login-error" id="login-error" style="display: none; color: #ff6b6b; margin-bottom: 10px; text-align: center;"></div>
+      
+      <div class="add-form-row">
+        <button class="add-form-button" id="login-button">Войти</button>
+      </div>
+      
+      <p style="text-align: center; margin-top: 15px; color: white;"> 
+        <a href="#" id="show-register" style="color: white;">Зарегистрироваться</a>
+      </p>
+    </div>
+
+    <div class="add-form" id="register-form" style="display: none; margin-top: 20px;">
+      <h3 style="margin-bottom: 15px; color: white; text-align: center;">Регистрация</h3>
+      
+      <input 
+        type="text" 
+        id="register-name" 
+        class="add-form-name" 
+        placeholder="Имя" 
+        style="width: 100%; margin-bottom: 10px;"
+      />
+      
+      <input 
+        type="text" 
+        id="register-login" 
+        class="add-form-name" 
+        placeholder="Логин" 
+        style="width: 100%; margin-bottom: 10px;"
+      />
+      
+      <input 
+        type="password" 
+        id="register-password" 
+        class="add-form-name" 
+        placeholder="Пароль" 
+        style="width: 100%; margin-bottom: 10px;"
+      />
+      
+      <div class="login-error" id="register-error" style="display: none; color: #ff6b6b; margin-bottom: 10px; text-align: center;"></div>
+      
+      <div class="add-form-row">
+        <button class="add-form-button" id="register-button">Зарегистрироваться</button>
+      </div>
+      
+      <p style="text-align: center; margin-top: 15px; color: white;">
+        Уже есть аккаунт? 
+        <a href="#" id="show-login" style="color: #bcec30; text-decoration: none;">Войти</a>
+      </p>
+    </div>
+    
+    <div style="text-align: center; margin-top: 20px;">
+      <a href="#" id="back-to-comments" style="color: #bcec30; text-decoration: none;">← Назад к комментариям</a>
     </div>
   `;
 
-  return li;
+  container.innerHTML = loginHtml;
 }
-
-// Вспомогательные функции
-function formatDate(dateString) {
-  try {
-    // Если дата уже в формате "12.02.22 12:18", оставляем как есть
-    if (typeof dateString === "string" && dateString.match(/\d{2}\.\d{2}\.\d{2} \d{2}:\d{2}/)) {
-      return dateString;
-    }
-
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      return dateString;
-    }
-
-    return date
-      .toLocaleDateString("ru-RU", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-      .replace(",", "");
-  } catch (error) {
-    return dateString;
-  }
-}
-
-function escapeHtml(text) {
-  if (typeof text !== "string") return "";
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
-}
-/*
-// Эта функция может понадобиться для совместимости
-export function getCommentElement(index) {
-  return document.querySelector(`.comment[data-index="${index}"]`);
-}
-*/
