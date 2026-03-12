@@ -1,12 +1,11 @@
 import { escapeHtml } from "./escapeHtml.js";
 import { validateComment } from "./validation.js";
-import { renderComments } from "./render.js";
+import { renderComments, renderCommentsToContainer } from "./render.js";
 import { addComment, getComments, toggleLike } from "./api.js";
 import { isAuthenticated } from "./auth.js";
 import { currentComments } from "../app.js";
 
 export function handleAddComment() {
-  // Находим поле ввода
   const textInputElement = document.getElementById("comment-input");
 
   if (!textInputElement) {
@@ -15,7 +14,6 @@ export function handleAddComment() {
     return;
   }
 
-  // Находим кнопку
   const addButtonElement = document.querySelector(".add-form-button");
 
   if (!addButtonElement) {
@@ -26,7 +24,6 @@ export function handleAddComment() {
 
   const textValue = textInputElement.value.trim();
 
-  // Проверяем авторизацию
   if (!isAuthenticated()) {
     alert("Чтобы добавить комментарий, нужно авторизоваться");
     const appContainer = document.getElementById("app-container");
@@ -49,14 +46,17 @@ export function handleAddComment() {
   const safeText = escapeHtml(textValue);
 
   // Находим форму и лоадер
-  const addForm = document.querySelector(".add-form");
+  const addForm = document.getElementById("comment-form");
   const formLoading = document.querySelector(".form-loading");
-  const originalText = addButtonElement.textContent;
-
+  // проверкf наличия элементов
+  if (!addForm || !formLoading) {
+    console.error("Форма или лоадер не найдены!");
+    alert("Ошибка интерфейса. Попробуйте обновить страницу.");
+    return;
+  }
   // Скрываем форму, показываем загрузку
   addForm.style.display = "none";
   formLoading.style.display = "block";
-  addButtonElement.textContent = "Добавляем...";
   addButtonElement.disabled = true;
 
   return addComment({ text: safeText })
@@ -64,15 +64,7 @@ export function handleAddComment() {
     .then((updatedComments) => {
       currentComments.length = 0;
       currentComments.push(...updatedComments);
-
-      // Рендерим  контейнер приложения
-      const appContainer = document.getElementById("app-container");
-      if (appContainer) {
-        renderComments(appContainer, updatedComments, true);
-      } else {
-        console.error("Контейнер app-container не найден!");
-      }
-
+      renderCommentsToContainer(updatedComments);
       // Очищаем форму
       textInputElement.value = "";
       textInputElement.focus();
@@ -84,7 +76,6 @@ export function handleAddComment() {
     .finally(() => {
       addForm.style.display = "";
       formLoading.style.display = "none";
-      addButtonElement.textContent = originalText;
       addButtonElement.disabled = false;
     });
 }

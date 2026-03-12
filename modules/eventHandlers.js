@@ -13,6 +13,17 @@ export function setupLoginLink() {
       renderLoginForm(appContainer);
       import("./loginHandler.js").then(({ initLoginHandlers }) => {
         initLoginHandlers(appContainer);
+
+        // Прокручиваем к форме входа
+        setTimeout(() => {
+          const authForm = document.querySelector(".add-form");
+          if (authForm) {
+            authForm.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+          }
+        }, 100);
       });
     });
   });
@@ -52,8 +63,7 @@ export function setupEventListeners(container, replyInput) {
 }
 
 export function setupFormHandlers(handleAddComment) {
-
-  const addButton = document.querySelector(".add-form-button");
+  const addButton = document.getElementById("add-button");
   const textInput = document.querySelector(".add-form-text");
 
   if (!addButton || !textInput) {
@@ -98,6 +108,17 @@ export function setupAuthButton() {
         renderLoginForm(appContainer);
         import("./loginHandler.js").then(({ initLoginHandlers }) => {
           initLoginHandlers(appContainer);
+
+          // Прокручиваем к форме входа
+          setTimeout(() => {
+            const authForm = document.querySelector(".add-form");
+            if (authForm) {
+              authForm.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+            }
+          }, 100);
         });
       });
     }

@@ -1,7 +1,7 @@
-import { getUserName } from "./auth.js"; 
+import { getUserName } from "./auth.js";
 
 function getCurrentUserName() {
-  return getUserName(); 
+  return getUserName();
 }
 
 export function renderComments(container, comments, showForm = false) {
@@ -31,13 +31,17 @@ export function renderComments(container, comments, showForm = false) {
   const logoutButtonHtml = showForm
     ? `
     <div class="logout-section">
-      <button class="logout-button" id="logout-button">Выйти</button>
+      <div class="logout-button-wrapper">
+        <button class="add-form-button" id="logout-button">Выйти</button>
+      </div>
     </div>
   `
     : "";
 
   const addFormHtml = showForm
-    ? `<div class="add-form">
+    ? `
+    <!-- Форма для ввода комментария -->
+    <div class="add-form" id="comment-form">
       <input 
         type="text" 
         class="add-form-name" 
@@ -56,13 +60,15 @@ export function renderComments(container, comments, showForm = false) {
       <div class="add-form-row">
         <button class="add-form-button" id="add-button">Написать</button>
       </div>
-      <div class="form-loading" style="display: none;" id="adding-message">
-        Комментарий добавляется...
-      </div>
+    </div>
+    
+    <!-- Лоадер отдельно от формы -->
+    <div class="form-loading" style="display: none;" id="adding-message">
+      Комментарий добавляется...
     </div>`
     : `<div class="login-prompt">
-      <p>Чтобы добавить комментарий, <a href="#" class="login-link" id="show-login-link">войдите</a></p>
-    </div>`;
+        <p>Чтобы добавить комментарий, <a href="#" class="login-link" id="show-login-link">войдите</a></p>
+      </div>`;
 
   const fullHtml = `
     ${logoutButtonHtml}
@@ -153,4 +159,13 @@ export function renderLoginForm(container) {
   `;
 
   container.innerHTML = loginHtml;
+}
+
+export function renderCommentsToContainer(comments) {
+  const appContainer = document.getElementById("app-container");
+  if (appContainer) {
+    renderComments(appContainer, comments, true);
+  } else {
+    console.error("Контейнер app-container не найден!");
+  }
 }

@@ -135,3 +135,38 @@ body {
 .add-form-button:hover {
   opacity: 0.9;
 }
+
+.logout-section {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.logout-button-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+}
+
+.logout-section .add-form-button {
+  min-width: 100px;
+  background-color: #bcec30;
+  color: #2d2d2d;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.logout-section .add-form-button:hover {
+  background-color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(188, 236, 48, 0.4);
+}
