@@ -48,7 +48,7 @@ export function handleAddComment() {
   // Находим форму и лоадер
   const addForm = document.getElementById("comment-form");
   const formLoading = document.querySelector(".form-loading");
-  // проверкf наличия элементов
+  // проверка наличия элементов
   if (!addForm || !formLoading) {
     console.error("Форма или лоадер не найдены!");
     alert("Ошибка интерфейса. Попробуйте обновить страницу.");
@@ -86,7 +86,7 @@ export function handleToggleLike(commentId) {
     return Promise.resolve();
   }
 
-  // Оптимистичный UI (сразу меняем интерфейс)
+  // Оптимистичный UI ( меняем интерфейс)
   const comment = currentComments.find((c) => c.id === commentId);
   if (comment) {
     comment.isLiked = !comment.isLiked;
@@ -143,6 +143,6 @@ export function quoteComment(commentId, replyInput) {
   const textWithoutHtml = commentText.replace(/<[^>]*>/g, "");
   const quotedText = `> ${authorName}:\n> ${textWithoutHtml}\n\n`;
 
-  replyInput.value = quotedText + (replyInput.value || "");
+  replyInput.value = quotedText;
   replyInput.focus();
 }

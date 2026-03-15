@@ -2,6 +2,8 @@ import { login, register } from "./auth.js";
 import { renderComments } from "./render.js";
 import { getComments } from "./api.js";
 import { currentComments } from "../app.js";
+import { setupEventListeners, setupFormHandlers, setupLoginLink } from "./eventHandlers.js";
+import { handleAddComment } from "./commentHandlers.js";
 
 export function initLoginHandlers(container) {
   // НАХОДИМ ФОРМЫ
@@ -67,7 +69,30 @@ export function initLoginHandlers(container) {
       .then((comments) => {
         currentComments.length = 0;
         currentComments.push(...comments);
+
+        // Рендерим комментарии с формой для авторизованных
         renderComments(container, comments, true);
+
+        // Перенастраиваем все обработчики после рендеринга
+        setTimeout(() => {
+          console.log("🔄 Настройка обработчиков после входа");
+
+          const textInput = document.getElementById("comment-input");
+          const commentsList = document.getElementById("comments-list");
+
+          // Настраиваем обработчики для комментариев
+          if (commentsList) {
+            setupEventListeners(commentsList, textInput);
+          }
+
+          // Настраиваем форму добавления комментария
+          if (textInput) {
+            setupFormHandlers(handleAddComment);
+          }
+
+          // Настраиваем ссылку входа
+          setupLoginLink();
+        }, 100);
       })
       .catch((error) => {
         loginError.textContent = error.message;
@@ -101,7 +126,27 @@ export function initLoginHandlers(container) {
       .then((comments) => {
         currentComments.length = 0;
         currentComments.push(...comments);
+
+        // Рендерим комментарии с формой для авторизованных
         renderComments(container, comments, true);
+
+        // Перенастраиваем все обработчики после рендеринга
+        setTimeout(() => {
+          console.log("🔄 Настройка обработчиков после регистрации");
+
+          const textInput = document.getElementById("comment-input");
+          const commentsList = document.getElementById("comments-list");
+
+          if (commentsList) {
+            setupEventListeners(commentsList, textInput);
+          }
+
+          if (textInput) {
+            setupFormHandlers(handleAddComment);
+          }
+
+          setupLoginLink();
+        }, 100);
       })
       .catch((error) => {
         registerError.textContent = error.message;

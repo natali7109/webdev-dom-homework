@@ -1,11 +1,10 @@
+localStorage.removeItem("token");
+localStorage.removeItem("user");
+console.log("Принудительный выход при загрузке страницы");
+
 import { renderComments, renderLoginForm } from "./modules/render.js";
 import { initLoginHandlers } from "./modules/loginHandler.js";
-import {
-  setupEventListeners,
-  setupFormHandlers,
-  setupLogoutButton,
-  setupLoginLink,
-} from "./modules/eventHandlers.js";
+import { setupEventListeners, setupFormHandlers, setupLoginLink } from "./modules/eventHandlers.js";
 import { getComments, addComment } from "./modules/api.js";
 import { isAuthenticated } from "./modules/auth.js";
 import { handleAddComment } from "./modules/commentHandlers.js";
@@ -23,7 +22,7 @@ function initApp() {
     return;
   }
 
-  // загружаем комментарии (видят все!)
+  // загружаем комментарии (видят все)
   appContainer.innerHTML = '<div class="loader">Загрузка комментариев...</div>';
 
   getComments()
@@ -43,8 +42,8 @@ function initApp() {
     })
     .finally(() => {
       setTimeout(() => {
-        setupLogoutButton();
         setupLoginLink();
+
         if (isAuthenticated()) {
           const textInput = document.getElementById("comment-input");
           const addButton = document.getElementById("add-button");

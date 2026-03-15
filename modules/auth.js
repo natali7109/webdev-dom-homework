@@ -15,7 +15,8 @@ export function removeToken() {
 }
 
 export function isAuthenticated() {
-  return !!getToken();
+  const token = getToken();
+  return !!token;
 }
 
 // СОХРАНЯЕМ ПОЛЬЗОВАТЕЛЯ
@@ -81,4 +82,10 @@ export function register({ login, password, name }) {
       setUser(data.user);
       return data;
     });
+}
+
+export function logout() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  console.log("🚪 Выход выполнен");
 }

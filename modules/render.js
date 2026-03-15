@@ -1,4 +1,4 @@
-import { getUserName } from "./auth.js";
+import { getUserName, isAuthenticated } from "./auth.js";
 
 function getCurrentUserName() {
   return getUserName();
@@ -27,17 +27,6 @@ export function renderComments(container, comments, showForm = false) {
     })
     .join("");
 
-  // Кнопка выхода (только для авторизованных)
-  const logoutButtonHtml = showForm
-    ? `
-    <div class="logout-section">
-      <div class="logout-button-wrapper">
-        <button class="add-form-button" id="logout-button">Выйти</button>
-      </div>
-    </div>
-  `
-    : "";
-
   const addFormHtml = showForm
     ? `
     <!-- Форма для ввода комментария -->
@@ -48,10 +37,8 @@ export function renderComments(container, comments, showForm = false) {
         id="user-name-input"
         value="${getUserName()}" 
         readonly
-        style="background-color: rgba(255, 255, 255, 0.1); color: white; opacity: 0.9;"
       />
       <textarea
-        type="textarea"
         class="add-form-text"
         id="comment-input"
         placeholder="Введите ваш комментарий"
@@ -61,17 +48,13 @@ export function renderComments(container, comments, showForm = false) {
         <button class="add-form-button" id="add-button">Написать</button>
       </div>
     </div>
-    
-    <!-- Лоадер отдельно от формы -->
-    <div class="form-loading" style="display: none;" id="adding-message">
-      Комментарий добавляется...
-    </div>`
-    : `<div class="login-prompt">
-        <p>Чтобы добавить комментарий, <a href="#" class="login-link" id="show-login-link">войдите</a></p>
-      </div>`;
+    <div class="form-loading" style="display: none;">Комментарий добавляется...</div>`
+    : `
+    <div class="login-prompt">
+      <p>Чтобы добавить комментарий, <span class="link-login" id="show-login-link">войдите</span></p>
+    </div>`;
 
   const fullHtml = `
-    ${logoutButtonHtml}
     <ul class="comments" id="comments-list">
       ${commentsHtml}
     </ul>
@@ -164,7 +147,8 @@ export function renderLoginForm(container) {
 export function renderCommentsToContainer(comments) {
   const appContainer = document.getElementById("app-container");
   if (appContainer) {
-    renderComments(appContainer, comments, true);
+    const isAuth = isAuthenticated();
+    renderComments(appContainer, comments, isAuth);
   } else {
     console.error("Контейнер app-container не найден!");
   }

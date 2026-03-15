@@ -170,3 +170,29 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(188, 236, 48, 0.4);
 }
+
+/* Стили для приглашения войти */
+.login-prompt {
+  width: 596px;
+  margin-top: 30px;
+  text-align: center;
+  color: #ffffff;
+  font-size: 16px;
+  font-family: Helvetica, sans-serif;
+}
+
+.login-prompt p {
+  margin: 0;
+  padding: 0;
+}
+
+.login-prompt .link-login {
+  color: #bcec30;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.login-prompt .link-login:hover {
+  opacity: 0.8;
+}
