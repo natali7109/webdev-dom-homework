@@ -1,12 +1,16 @@
-export function validateComment(nameValue, textValue) {
-  if (!nameValue.trim()) {
-    return { isValid: false, message: "Пожалуйста, введите ваше имя", focusElement: "name" };
-  }
-
+export function validateComment(textValue) {
   if (!textValue.trim()) {
     return {
       isValid: false,
       message: "Пожалуйста, введите текст комментария",
+      focusElement: "text",
+    };
+  }
+
+  if (textValue.trim().length < 3) {
+    return {
+      isValid: false,
+      message: "Комментарий должен быть не короче 3 символов",
       focusElement: "text",
     };
   }

@@ -1,103 +1,113 @@
 import { escapeHtml } from "./escapeHtml.js";
 import { validateComment } from "./validation.js";
-import { renderComments } from "./render.js";
-import { addComment, getComments } from "./api.js";
+import { renderComments, renderCommentsToContainer } from "./render.js";
+import { addComment, getComments, toggleLike } from "./api.js";
+import { isAuthenticated } from "./auth.js";
 import { currentComments } from "../app.js";
-import { commentsList, nameInput, textInput } from "./domElements.js";
 
 export function handleAddComment() {
-  console.log("=== handleAddComment вызван ===");
+  const textInputElement = document.getElementById("comment-input");
 
-  const nameValue = nameInput.value.trim();
-  const textValue = textInput.value.trim();
-
-  const validation = validateComment(nameValue, textValue);
-  if (!validation.isValid) {
-    alert(validation.message);
-    validation.focusElement === "name" ? nameInput.focus() : textInput.focus();
+  if (!textInputElement) {
+    console.error("Поле ввода не найдено в DOM!");
+    alert("Форма комментария не загружена. Попробуйте обновить страницу.");
     return;
   }
 
-  // Экранирование HTML
-  const safeName = escapeHtml(nameValue);
+  const addButtonElement = document.querySelector(".add-form-button");
+
+  if (!addButtonElement) {
+    console.error("Кнопка не найдена в DOM!");
+    alert("Ошибка загрузки формы");
+    return;
+  }
+
+  const textValue = textInputElement.value.trim();
+
+  if (!isAuthenticated()) {
+    alert("Чтобы добавить комментарий, нужно авторизоваться");
+    const appContainer = document.getElementById("app-container");
+    import("./render.js").then(({ renderLoginForm }) => {
+      renderLoginForm(appContainer);
+      import("./loginHandler.js").then(({ initLoginHandlers }) => {
+        initLoginHandlers(appContainer);
+      });
+    });
+    return;
+  }
+
+  const validation = validateComment(textValue);
+  if (!validation.isValid) {
+    alert(validation.message);
+    textInputElement.focus();
+    return;
+  }
+
   const safeText = escapeHtml(textValue);
 
-  // НАХОДИМ ФОРМУ И ЛОАДЕР
-  const addForm = document.querySelector(".add-form");
+  // Находим форму и лоадер
+  const addForm = document.getElementById("comment-form");
   const formLoading = document.querySelector(".form-loading");
-  const addButton = document.querySelector(".add-form-button");
-  const originalText = addButton.textContent;
-
-  // СКРЫВАЕМ ФОРМУ, ПОКАЗЫВАЕМ "Комментарий добавляется..."
+  // проверка наличия элементов
+  if (!addForm || !formLoading) {
+    console.error("Форма или лоадер не найдены!");
+    alert("Ошибка интерфейса. Попробуйте обновить страницу.");
+    return;
+  }
+  // Скрываем форму, показываем загрузку
   addForm.style.display = "none";
   formLoading.style.display = "block";
-  addButton.textContent = "Добавляем...";
-  addButton.disabled = true;
+  addButtonElement.disabled = true;
 
-  return addComment({
-    text: safeText,
-    name: safeName,
-  })
-    .then((result) => {
-      console.log("Сервер ответил:", result);
-      console.log("Запрашиваем обновленный список...");
-      return getComments();
-    })
+  return addComment({ text: safeText })
+    .then(() => getComments())
     .then((updatedComments) => {
-      console.log("Обновленный список:", updatedComments);
-
-      // Обновляем currentComments
       currentComments.length = 0;
       currentComments.push(...updatedComments);
-
-      // Перерисовываем
-      renderComments(commentsList);
-
+      renderCommentsToContainer(updatedComments);
       // Очищаем форму
-      nameInput.value = "";
-      textInput.value = "";
-      nameInput.focus();
-
-      console.log("=== Комментарий успешно добавлен ===");
+      textInputElement.value = "";
+      textInputElement.focus();
     })
     .catch((error) => {
-      console.error("Ошибка при добавлении комментария:", error);
-      alert(`Ошибка: ${error.message}\n\nПопробуйте еще раз.`);
+      console.error("Ошибка:", error);
+      alert(error.message);
     })
     .finally(() => {
       addForm.style.display = "";
       formLoading.style.display = "none";
-      addButton.textContent = originalText;
-      addButton.disabled = false;
+      addButtonElement.disabled = false;
     });
 }
 
-export async function toggleLike(commentId) {
-  console.log("=== toggleLike (локальный) для ID:", commentId);
-
-  // Находим комментарий
-  const commentIndex = currentComments.findIndex((c) => c.id === commentId || c.id == commentId);
-  if (commentIndex === -1) {
-    console.log("Комментарий не найден");
-    return;
+export function handleToggleLike(commentId) {
+  if (!isAuthenticated()) {
+    alert("Чтобы ставить лайки, нужно авторизоваться");
+    return Promise.resolve();
   }
 
-  // Меняем состояние локально
-  const comment = currentComments[commentIndex];
-  comment.isLiked = !comment.isLiked;
-  comment.likes = comment.isLiked
-    ? (comment.likes || 0) + 1
-    : Math.max(0, (comment.likes || 0) - 1);
+  // Оптимистичный UI ( меняем интерфейс)
+  const comment = currentComments.find((c) => c.id === commentId);
+  if (comment) {
+    comment.isLiked = !comment.isLiked;
+    comment.likes = comment.isLiked ? (comment.likes || 0) + 1 : (comment.likes || 0) - 1;
 
-  console.log("Новое состояние:", {
-    isLiked: comment.isLiked,
-    likes: comment.likes,
+    // Обновляем DOM для этого комментария
+    updateCommentInDOM(commentId, comment);
+  }
+
+  // Отправляем запрос на сервер
+  return toggleLike(commentId).catch((error) => {
+    console.error("Ошибка при лайке:", error);
+    alert(error.message);
+
+    // Откатываем изменения при ошибке
+    if (comment) {
+      comment.isLiked = !comment.isLiked;
+      comment.likes = comment.isLiked ? (comment.likes || 0) + 1 : (comment.likes || 0) - 1;
+      updateCommentInDOM(commentId, comment);
+    }
   });
-
-  // Перерисовываем этот комментарий
-  updateCommentInDOM(commentId, comment);
-
-  console.log("=== Лайк обработан локально ===");
 }
 
 // Функция для обновления одного комментария в DOM
@@ -122,19 +132,17 @@ function updateCommentInDOM(commentId, commentData) {
 }
 
 export function quoteComment(commentId, replyInput) {
-  console.log("quoteComment вызван для ID:", commentId);
-
   const comment = currentComments.find((c) => c.id == commentId);
   if (!comment) return;
 
-  // Имя из author.name
-  const authorName = comment.author ? comment.author.name : "Аноним";
+  // Имя автора
+  const authorName = comment.author?.name || "Аноним";
   const commentText = comment.text || "";
 
   // Удаляем HTML
   const textWithoutHtml = commentText.replace(/<[^>]*>/g, "");
   const quotedText = `> ${authorName}:\n> ${textWithoutHtml}\n\n`;
 
-  replyInput.value = quotedText + (replyInput.value || "");
+  replyInput.value = quotedText;
   replyInput.focus();
 }
